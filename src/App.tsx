@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
+import { AgentPage } from "./components/AgentPage";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +16,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="dark">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/assistente" element={<AgentPage title="Assistente de Uso" description="Tire suas dúvidas sobre como usar a plataforma." />} />
+            <Route path="/criador-negocios" element={<AgentPage title="Criador de Negócios IA" description="A IA que cria seu negócio de agentes de IA do absoluto zero. Exclusivo para quem está começando seu negócio de IA." />} />
+            <Route path="/criador-agentes" element={<AgentPage title="Criador de Agentes" description="Crie agentes de IA personalizados para diversos casos de uso." />} />
+            <Route path="/expert-nichos" element={<AgentPage title="Expert em Nichos" description="Descubra os melhores nichos para atuar com agentes de IA." />} />
+            <Route path="/cerebro-gabarra" element={<AgentPage title="Cérebro Gabarra.ai" description="O cérebro por trás de toda a estratégia de negócios." />} />
+            <Route path="/expert-gestao" element={<AgentPage title="Expert em Gestão" description="Otimize a gestão do seu negócio de IA." />} />
+            <Route path="/expert-vendas" element={<AgentPage title="Expert em Vendas" description="Domine as técnicas de vendas para agentes de IA." />} />
+            <Route path="/expert-funis" element={<AgentPage title="Expert em Funis" description="Crie funis de vendas eficientes para seu negócio." />} />
+            <Route path="/expert-trafego" element={<AgentPage title="Expert em Tráfego" description="Aprenda tráfego pago para escalar seu negócio." />} />
+            <Route path="/copywriter-funil" element={<AgentPage title="Copywriter Funil Australiano" description="Copywriting especializado para funis de vendas." />} />
+            <Route path="/cursos" element={<AgentPage title="Cursos" description="Acesse cursos e treinamentos exclusivos." />} />
+            <Route path="/suporte" element={<AgentPage title="Suporte" description="Precisa de ajuda? Fale com nosso suporte." />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
