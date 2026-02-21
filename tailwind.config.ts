@@ -56,6 +56,17 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          muted: "hsl(var(--sidebar-muted))",
+        },
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          foreground: "hsl(var(--surface-foreground))",
+          border: "hsl(var(--surface-border))",
+          hover: "hsl(var(--surface-hover))",
+        },
+        "chat-input": {
+          DEFAULT: "hsl(var(--chat-input))",
+          foreground: "hsl(var(--chat-input-foreground))",
         },
       },
       borderRadius: {
