@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLocation } from "react-router-dom";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,6 +20,14 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  // Reset chat when route changes
+  useEffect(() => {
+    setMessages([]);
+    setInput("");
+    setIsLoading(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,7 +113,6 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
         }
       }
 
-      // Final flush
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split("\n")) {
           if (!raw) continue;
@@ -130,7 +138,6 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-3xl space-y-4">
           {messages.map((msg, i) => (
@@ -157,7 +164,6 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
         </div>
       </div>
 
-      {/* Input */}
       <div className="border-t border-border p-4">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 rounded-xl bg-chat-input px-4 py-3">
