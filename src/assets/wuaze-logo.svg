@@ -1,0 +1,45 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D2BFF"></stop>
+      <stop offset="50%" stop-color="#003CFF"></stop>
+      <stop offset="100%" stop-color="#001F7A"></stop>
+    </linearGradient>
+
+    <linearGradient id="foldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3DBBFF"></stop>
+      <stop offset="100%" stop-color="#00F0FF"></stop>
+    </linearGradient>
+  </defs>
+
+  <rect width="600" height="600" fill="url(#bgGradient)"></rect>
+
+  <!-- W Shape -->
+  <path d="
+    M150 180
+    Q150 150 180 150
+    L230 150
+    Q260 150 260 180
+    L260 330
+    Q260 360 290 360
+    Q320 360 320 330
+    L320 180
+    Q320 150 350 150
+    L400 150
+    Q430 150 430 180
+    L430 420
+    Q430 460 390 460
+    L360 460
+    Q320 460 300 420
+    Q280 460 240 460
+    L210 460
+    Q170 460 170 420
+    Z
+  " fill="#D9D9D9"></path>
+
+  <!-- Folded Corner -->
+  <polygon points="350,150 430,150 430,230" fill="url(#foldGradient)"></polygon>
+
+</svg>

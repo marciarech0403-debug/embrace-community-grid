@@ -24,7 +24,6 @@ const App = () => (
             <Route path="/criador-negocios" element={<AgentPage title="Criador de Negócios IA" description="A IA que cria seu negócio de agentes de IA do absoluto zero." agent="criador-negocios" />} />
             <Route path="/criador-agentes" element={<AgentPage title="Criador de Agentes" description="Crie agentes de IA personalizados para diversos casos de uso." agent="criador-agentes" />} />
             <Route path="/expert-nichos" element={<AgentPage title="Expert em Nichos" description="Descubra os melhores nichos para atuar com agentes de IA." agent="expert-nichos" />} />
-            <Route path="/cerebro-gabarra" element={<AgentPage title="Cérebro Gabarra.ai" description="O cérebro por trás de toda a estratégia de negócios." agent="cerebro-gabarra" />} />
             <Route path="/expert-gestao" element={<AgentPage title="Expert em Gestão" description="Otimize a gestão do seu negócio de IA." agent="expert-gestao" />} />
             <Route path="/expert-vendas" element={<AgentPage title="Expert em Vendas" description="Domine as técnicas de vendas para agentes de IA." agent="expert-vendas" />} />
             <Route path="/expert-funis" element={<AgentPage title="Expert em Funis" description="Crie funis de vendas eficientes para seu negócio." agent="expert-funis" />} />

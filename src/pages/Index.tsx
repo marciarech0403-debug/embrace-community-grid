@@ -1,6 +1,7 @@
 import { MessageSquare, Zap, Target, TrendingUp } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { ChatInputBar } from "@/components/ChatInputBar";
+import wuazeLogo from "@/assets/wuaze-logo.svg";
 
 const features = [
   {
@@ -32,14 +33,14 @@ const Index = () => {
         {/* Logo */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <span className="bg-foreground text-background rounded p-1 text-xs font-black">▎</span>
-            agentor
+            <img src={wuazeLogo} alt="Wuaze" className="h-7 w-7" />
+            wuaze
           </h2>
         </div>
 
         {/* Welcome */}
         <h1 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-3">
-          Bem-vindo ao Agentor
+          Bem-vindo ao Wuaze
         </h1>
         <p className="text-muted-foreground text-center max-w-xl mb-10 text-sm leading-relaxed">
           Seu sócio digital que domina tudo sobre ganhar dinheiro com IA. Escolha um agente especializado na barra lateral para começar.
