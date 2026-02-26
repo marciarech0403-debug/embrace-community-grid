@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Configuracoes from "./pages/Configuracoes";
+import Assistente from "./pages/Assistente";
 import NotFound from "./pages/NotFound";
 import { AgentPage } from "./components/AgentPage";
 
@@ -20,7 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="/assistente" element={<AgentPage title="Assistente de Uso" description="Tire suas dúvidas sobre como usar a plataforma." agent="assistente" />} />
+            <Route path="/assistente" element={<Assistente />} />
             <Route path="/criador-negocios" element={<AgentPage title="Criador de Negócios IA" description="A IA que cria seu negócio de agentes de IA do absoluto zero." agent="criador-negocios" />} />
             <Route path="/criador-agentes" element={<AgentPage title="Criador de Agentes" description="Crie agentes de IA personalizados para diversos casos de uso." agent="criador-agentes" />} />
             <Route path="/expert-nichos" element={<AgentPage title="Expert em Nichos" description="Descubra os melhores nichos para atuar com agentes de IA." agent="expert-nichos" />} />

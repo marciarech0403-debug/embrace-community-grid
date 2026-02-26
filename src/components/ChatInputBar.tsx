@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -11,11 +12,12 @@ interface Message {
 interface ChatInputBarProps {
   placeholder?: string;
   agent?: string;
+  model?: string;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-export function ChatInputBar({ placeholder = "Selecione um agente para começar a conversar...", agent = "default" }: ChatInputBarProps) {
+export function ChatInputBar({ placeholder = "Selecione um agente para começar a conversar...", agent = "default", model }: ChatInputBarProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +30,13 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
     setInput("");
     setIsLoading(false);
   }, [location.pathname]);
+
+  // Also reset when model changes
+  useEffect(() => {
+    setMessages([]);
+    setInput("");
+    setIsLoading(false);
+  }, [model]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,7 +71,7 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg], agent }),
+        body: JSON.stringify({ messages: [...messages, userMsg], agent, ...(model ? { model } : {}) }),
       });
 
       if (resp.status === 429) {
@@ -137,19 +146,39 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
   };
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-3xl space-y-4">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`rounded-2xl px-4 py-3 text-sm max-w-[80%] whitespace-pre-wrap ${
+                className={`rounded-2xl px-4 py-3 text-sm max-w-[80%] ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-surface-hover text-foreground"
                 }`}
               >
-                {msg.content}
+                {msg.role === "assistant" ? (
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                      code: ({ children }) => <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>,
+                      pre: ({ children }) => <pre className="bg-background/50 p-3 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
+                      h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                ) : (
+                  <span className="whitespace-pre-wrap">{msg.content}</span>
+                )}
               </div>
             </div>
           ))}
@@ -164,7 +193,7 @@ export function ChatInputBar({ placeholder = "Selecione um agente para começar 
         </div>
       </div>
 
-      <div className="border-t border-border p-4">
+      <div className="border-t border-border p-4 shrink-0">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 rounded-xl bg-chat-input px-4 py-3">
             <input
