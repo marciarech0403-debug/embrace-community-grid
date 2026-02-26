@@ -145,7 +145,7 @@ export function AppSidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
         <NavLink
-          to="/"
+          to="/dashboard"
           end
           className={`flex items-center ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"} py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors`}
           activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
