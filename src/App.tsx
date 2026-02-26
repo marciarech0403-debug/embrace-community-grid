@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Configuracoes from "./pages/Configuracoes";
 import Assistente from "./pages/Assistente";
+import Welcome from "./pages/Welcome";
 import NotFound from "./pages/NotFound";
 import { AgentPage } from "./components/AgentPage";
 
@@ -19,7 +20,8 @@ const App = () => (
       <BrowserRouter>
         <div className="dark">
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Welcome />} />
+            <Route path="/dashboard" element={<Index />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/assistente" element={<Assistente />} />
             <Route path="/criador-negocios" element={<AgentPage title="Criador de Negócios IA" description="A IA que cria seu negócio de agentes de IA do absoluto zero." agent="criador-negocios" />} />

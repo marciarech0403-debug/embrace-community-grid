@@ -19,6 +19,27 @@ const SYSTEM_PROMPTS: Record<string, string> = {
   "default": "Você é um assistente inteligente do Wuaze. Ajude o usuário com suas dúvidas sobre negócios com agentes de IA. Responda em português brasileiro.",
 };
 
+const SUPPORTED_MODELS = [
+  "google/gemini-3-flash-preview",
+  "google/gemini-2.5-pro",
+  "google/gemini-2.5-flash",
+];
+
+function getModel(requestedModel?: string): string {
+  if (!requestedModel) return "google/gemini-3-flash-preview";
+  // Check if it's already a supported model (with or without prefix)
+  const withPrefix = requestedModel.startsWith("google/") || requestedModel.startsWith("openai/")
+    ? requestedModel
+    : null;
+  if (withPrefix && SUPPORTED_MODELS.includes(withPrefix)) return withPrefix;
+  // Check partial matches
+  for (const m of SUPPORTED_MODELS) {
+    if (m.includes(requestedModel) || requestedModel.includes(m.replace("google/", ""))) return m;
+  }
+  // Not supported → pick random from the 3
+  return SUPPORTED_MODELS[Math.floor(Math.random() * SUPPORTED_MODELS.length)];
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -30,7 +51,8 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const systemPrompt = SYSTEM_PROMPTS[agent] || SYSTEM_PROMPTS["default"];
-    const selectedModel = model || "google/gemini-3-flash-preview";
+    const selectedModel = getModel(model);
+    console.log(`Requested model: ${model}, Using: ${selectedModel}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
