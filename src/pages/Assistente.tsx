@@ -117,8 +117,8 @@ export default function Assistente() {
       <div className="flex flex-col h-full">
         {/* Header with model selector */}
         <div className="px-6 py-4 border-b border-border shrink-0">
-          <h1 className="text-lg font-bold text-foreground">Assistente de Uso</h1>
-          <p className="text-xs text-muted-foreground mb-3">Chat direto com modelos de IA</p>
+          <h1 className="text-lg font-bold text-foreground">Models / Direct Chat</h1>
+          <p className="text-xs text-muted-foreground mb-3">Selecione um modelo para conversar diretamente</p>
 
           <div className="relative max-w-md">
             <button
