@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Configuracoes from "./pages/Configuracoes";
 import Assistente from "./pages/Assistente";
 import Welcome from "./pages/Welcome";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { AgentPage } from "./components/AgentPage";
 
@@ -20,7 +21,8 @@ const App = () => (
       <BrowserRouter>
         <div className="dark">
           <Routes>
-            <Route path="/" element={<Welcome />} />
+            <Route path="/" element={<Login />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/dashboard" element={<Index />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/assistente" element={<Assistente />} />

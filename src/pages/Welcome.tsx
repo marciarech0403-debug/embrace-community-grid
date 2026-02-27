@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import wuazeLogo from "@/assets/wuaze-logo.svg";
+import x0Logo from "@/assets/x0-logo.png";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -15,11 +15,11 @@ export default function Welcome() {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center gap-8 px-6">
-        <img src={wuazeLogo} alt="Wuaze" className="h-20 w-20 drop-shadow-2xl" />
-        
+        <img src={x0Logo} alt="x0" className="h-20 w-20 drop-shadow-2xl" />
+
         <div className="text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-            wuaze
+            x0
           </h1>
           <p className="text-muted-foreground text-sm md:text-base max-w-md leading-relaxed">
             Seu sócio digital que domina tudo sobre ganhar dinheiro com IA.
