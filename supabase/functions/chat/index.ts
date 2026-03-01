@@ -7,16 +7,16 @@ const corsHeaders = {
 };
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  "assistente": "Você é o Assistente do x0. Ajude os usuários a entenderem como usar a plataforma x0. Responda em português brasileiro de forma clara e objetiva.",
-  "criador-negocios": "Você é o Criador de Negócios IA do x0. Ajude os usuários a criar seus negócios de agentes de IA do absoluto zero. Dê estratégias práticas, passo a passo, para quem está começando. Responda em português brasileiro.",
-  "criador-agentes": "Você é o Criador de Agentes do x0. Ajude os usuários a criar agentes de IA personalizados para diversos casos de uso. Dê sugestões de prompts, fluxos e configurações. Responda em português brasileiro.",
-  "expert-nichos": "Você é o Expert em Nichos do x0. Ajude os usuários a descobrir os melhores nichos para atuar com agentes de IA. Analise mercados, demandas e oportunidades. Responda em português brasileiro.",
-  "expert-gestao": "Você é o Expert em Gestão do x0. Ajude os usuários a otimizar a gestão do seu negócio de IA com processos, métricas e organização. Responda em português brasileiro.",
-  "expert-vendas": "Você é o Expert em Vendas do x0. Ensine técnicas de vendas para agentes de IA, scripts, objeções e fechamento. Responda em português brasileiro.",
-  "expert-funis": "Você é o Expert em Funis do x0. Ajude a criar funis de vendas eficientes para negócios de IA. Responda em português brasileiro.",
-  "expert-trafego": "Você é o Expert em Tráfego do x0. Ensine tráfego pago para escalar negócios de IA. Responda em português brasileiro.",
-  "copywriter-funil": "Você é o Copywriter Funil Australiano do x0. Crie copywriting especializado para funis de vendas de agentes de IA. Responda em português brasileiro.",
-  "default": "Você é um assistente inteligente do x0. Ajude o usuário com suas dúvidas sobre negócios com agentes de IA. Responda em português brasileiro.",
+  "assistente": "Você é o Assistente do OTTO. Ajude os usuários a entenderem como usar a plataforma OTTO. Responda em português brasileiro de forma clara e objetiva.",
+  "criador-negocios": "Você é o Criador de Negócios IA do OTTO. Ajude os usuários a criar seus negócios de agentes de IA do absoluto zero. Dê estratégias práticas, passo a passo, para quem está começando. Responda em português brasileiro.",
+  "criador-agentes": "Você é o Criador de Agentes do OTTO. Ajude os usuários a criar agentes de IA personalizados para diversos casos de uso. Responda em português brasileiro.",
+  "expert-nichos": "Você é o Expert em Nichos do OTTO. Ajude os usuários a descobrir os melhores nichos para atuar com agentes de IA. Responda em português brasileiro.",
+  "expert-gestao": "Você é o Expert em Gestão do OTTO. Ajude os usuários a otimizar a gestão do seu negócio de IA. Responda em português brasileiro.",
+  "expert-vendas": "Você é o Expert em Vendas do OTTO. Ensine técnicas de vendas para agentes de IA. Responda em português brasileiro.",
+  "expert-funis": "Você é o Expert em Funis do OTTO. Ajude a criar funis de vendas eficientes. Responda em português brasileiro.",
+  "expert-trafego": "Você é o Expert em Tráfego do OTTO. Ensine tráfego pago para escalar negócios de IA. Responda em português brasileiro.",
+  "copywriter-funil": "Você é o Copywriter Funil Australiano do OTTO. Crie copywriting especializado para funis de vendas. Responda em português brasileiro.",
+  "default": "Você é o OTTO, um assistente inteligente. Ajude o usuário com suas dúvidas sobre negócios com agentes de IA. Responda em português brasileiro.",
 };
 
 const SUPPORTED_MODELS = [
@@ -27,23 +27,16 @@ const SUPPORTED_MODELS = [
 
 function getModel(requestedModel?: string): string {
   if (!requestedModel) return "google/gemini-3-flash-preview";
-  // Check if it's already a supported model (with or without prefix)
-  const withPrefix = requestedModel.startsWith("google/") || requestedModel.startsWith("openai/")
-    ? requestedModel
-    : null;
+  const withPrefix = requestedModel.startsWith("google/") || requestedModel.startsWith("openai/") ? requestedModel : null;
   if (withPrefix && SUPPORTED_MODELS.includes(withPrefix)) return withPrefix;
-  // Check partial matches
   for (const m of SUPPORTED_MODELS) {
     if (m.includes(requestedModel) || requestedModel.includes(m.replace("google/", ""))) return m;
   }
-  // Not supported → pick random from the 3
   return SUPPORTED_MODELS[Math.floor(Math.random() * SUPPORTED_MODELS.length)];
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { messages, agent, model } = await req.json();
@@ -52,53 +45,28 @@ serve(async (req) => {
 
     const systemPrompt = SYSTEM_PROMPTS[agent] || SYSTEM_PROMPTS["default"];
     const selectedModel = getModel(model);
-    console.log(`Requested model: ${model}, Using: ${selectedModel}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: selectedModel,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em instantes." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limit" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (response.status === 402) return new Response(JSON.stringify({ error: "Payment required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Erro no serviço de IA" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("AI error:", response.status, t);
+      return new Response(JSON.stringify({ error: "AI error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
+    return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
   } catch (e) {
     console.error("chat error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowUp, Loader2, Globe, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { ArrowUp, Globe, Image as ImageIcon, MessageSquare, Search, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import ottoLogo from "@/assets/otto-logo.png";
 
 interface Message {
   role: "user" | "assistant";
@@ -15,17 +16,62 @@ interface ChatInputBarProps {
   placeholder?: string;
   agent?: string;
   model?: string;
+  showModelSelector?: boolean;
+  allModels?: string[];
+  onModelChange?: (model: string) => void;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent = "default", model }: ChatInputBarProps) {
+const ALL_MODELS = [
+  "claude-opus-4-6-thinking", "claude-opus-4-6", "gemini-3-pro", "grok-4.1-thinking",
+  "gemini-3-flash", "gpt-5.1-high", "gpt-5.2-high", "gpt-5.2", "gpt-5.1",
+  "gpt-5-high", "deepseek-v3.2", "deepseek-r1", "claude-sonnet-4-20250514",
+  "gpt-4.1-2025-04-14", "gemini-2.5-pro", "gemini-2.5-flash", "llama-3.3-70b-instruct",
+  "mistral-large-3", "qwen3-235b-a22b", "claude-3-7-sonnet-20250219",
+];
+
+function ThinkingIndicator() {
+  return (
+    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-medium">Pensando</span>
+        <span className="flex gap-0.5">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="w-1 h-1 rounded-full bg-muted-foreground"
+              style={{
+                animation: `thinkingPulse 1.4s ease-in-out ${i * 0.2}s infinite`,
+              }}
+            />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function ChatInputBar({
+  placeholder = "O que você quer saber?",
+  agent = "default",
+  model: externalModel,
+  showModelSelector = false,
+  allModels = ALL_MODELS,
+  onModelChange,
+}: ChatInputBarProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("resposta");
+  const [selectedModel, setSelectedModel] = useState(externalModel || allModels[Math.floor(Math.random() * allModels.length)]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [modelSearch, setModelSearch] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+
+  const currentModel = externalModel || selectedModel;
 
   useEffect(() => {
     setMessages([]);
@@ -37,11 +83,25 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
     setMessages([]);
     setInput("");
     setIsLoading(false);
-  }, [model]);
+  }, [currentModel]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredModels = modelSearch
+    ? allModels.filter((m) => m.toLowerCase().includes(modelSearch.toLowerCase()))
+    : allModels;
 
   const send = async () => {
     const text = input.trim();
@@ -73,7 +133,7 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg], agent, ...(model ? { model } : {}) }),
+        body: JSON.stringify({ messages: [...messages, userMsg], agent, model: currentModel }),
       });
 
       if (resp.status === 429) { toast.error("Limite de requisições excedido."); setIsLoading(false); return; }
@@ -143,7 +203,7 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
-      {/* Tabs - shown when there are messages */}
+      {/* Tabs */}
       {hasMessages && (
         <div className="border-b border-border px-4 shrink-0">
           <div className="mx-auto max-w-3xl flex items-center gap-1">
@@ -167,52 +227,58 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto max-w-3xl space-y-4">
-          {activeTab === "resposta" && messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`rounded-2xl px-4 py-3 text-sm max-w-[80%] ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-surface-hover text-foreground"
-                }`}
-              >
-                {msg.role === "assistant" ? (
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                      em: ({ children }) => <em className="italic">{children}</em>,
-                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                      li: ({ children }) => <li className="mb-1">{children}</li>,
-                      code: ({ children }) => <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>,
-                      pre: ({ children }) => <pre className="bg-background/50 p-3 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
-                      h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                ) : (
-                  <span className="whitespace-pre-wrap">{msg.content}</span>
-                )}
-              </div>
+        <div className="mx-auto max-w-3xl">
+          {/* Grok-style hero when no messages */}
+          {!hasMessages && (
+            <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
+              <h1 className="text-[8rem] md:text-[12rem] font-bold text-foreground/[0.06] select-none leading-none tracking-tight">
+                OTTO
+              </h1>
             </div>
-          ))}
+          )}
+
+          {/* Messages */}
+          {activeTab === "resposta" && hasMessages && (
+            <div className="space-y-4">
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`rounded-2xl px-4 py-3 text-sm max-w-[80%] ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-foreground"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                          li: ({ children }) => <li className="mb-1">{children}</li>,
+                          code: ({ children }) => <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>,
+                          pre: ({ children }) => <pre className="bg-background/50 p-3 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <span className="whitespace-pre-wrap">{msg.content}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {activeTab === "links" && hasMessages && (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Links relacionados à sua pesquisa aparecerão aqui.</p>
+              <p className="text-sm text-muted-foreground">Links relacionados à sua pesquisa:</p>
               {messages.filter(m => m.role === "user").map((msg, i) => (
-                <a
-                  key={i}
-                  href={`https://www.google.com/search?q=${encodeURIComponent(msg.content)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-surface hover:bg-surface-hover border border-surface-border transition-colors"
-                >
+                <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(msg.content)}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-accent border border-border transition-colors">
                   <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div>
                     <p className="text-sm text-foreground">{msg.content}</p>
@@ -225,15 +291,10 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
 
           {activeTab === "imagens" && hasMessages && (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Imagens relacionadas à sua pesquisa aparecerão aqui.</p>
+              <p className="text-sm text-muted-foreground">Imagens relacionadas:</p>
               {messages.filter(m => m.role === "user").map((msg, i) => (
-                <a
-                  key={i}
-                  href={`https://www.google.com/search?q=${encodeURIComponent(msg.content)}&tbm=isch`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-surface hover:bg-surface-hover border border-surface-border transition-colors"
-                >
+                <a key={i} href={`https://www.google.com/search?q=${encodeURIComponent(msg.content)}&tbm=isch`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-accent border border-border transition-colors">
                   <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                   <div>
                     <p className="text-sm text-foreground">Imagens: {msg.content}</p>
@@ -245,9 +306,9 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
           )}
 
           {isLoading && messages[messages.length - 1]?.role === "user" && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl px-4 py-3 bg-surface-hover text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="flex justify-start mt-4">
+              <div className="rounded-2xl px-4 py-3 bg-card">
+                <ThinkingIndicator />
               </div>
             </div>
           )}
@@ -255,25 +316,78 @@ export function ChatInputBar({ placeholder = "Pergunte qualquer coisa...", agent
         </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border p-4 shrink-0">
-        <div className="mx-auto max-w-3xl">
-          <div className="flex items-center gap-3 rounded-xl bg-chat-input px-4 py-3">
+      {/* Input area */}
+      <div className={`p-4 shrink-0 ${hasMessages ? "border-t border-border" : ""}`}>
+        <div className="mx-auto max-w-3xl space-y-3">
+          {/* Model selector */}
+          {showModelSelector && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <img src={ottoLogo} alt="" className="h-4 w-auto opacity-60" />
+                <span className="truncate max-w-[200px]">{currentModel}</span>
+                <ChevronDown className="h-3 w-3" />
+              </button>
+
+              {showDropdown && (
+                <div className="absolute bottom-full mb-2 left-0 w-80 rounded-lg bg-card border border-border shadow-xl max-h-72 flex flex-col z-50">
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Buscar modelo..."
+                      value={modelSearch}
+                      onChange={(e) => setModelSearch(e.target.value)}
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="overflow-y-auto flex-1">
+                    {filteredModels.map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => {
+                          setSelectedModel(m);
+                          onModelChange?.(m);
+                          setShowDropdown(false);
+                          setModelSearch("");
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${
+                          currentModel === m ? "bg-accent text-foreground font-medium" : "text-muted-foreground"
+                        }`}
+                      >
+                        <img src={ottoLogo} alt="" className="h-3 w-auto opacity-40" />
+                        {m}
+                      </button>
+                    ))}
+                    {filteredModels.length === 0 && (
+                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">Nenhum modelo encontrado</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Input box */}
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
             <input
               type="text"
               placeholder={placeholder}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-chat-input-foreground outline-none"
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
               disabled={isLoading}
             />
             <button
               onClick={send}
               disabled={isLoading || !input.trim()}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-hover text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-30"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-4 w-4" />}
+              <ArrowUp className="h-4 w-4" />
             </button>
           </div>
         </div>
