@@ -4,7 +4,7 @@ import { ChatInputBar } from "@/components/ChatInputBar";
 const Index = () => {
   return (
     <AppLayout>
-      <ChatInputBar placeholder="Pergunte qualquer coisa..." agent="default" />
+      <ChatInputBar placeholder="O que você quer saber?" agent="default" showModelSelector />
     </AppLayout>
   );
 };
