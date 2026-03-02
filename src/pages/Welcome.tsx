@@ -6,6 +6,20 @@ export default function Welcome() {
 
   return (
     <div className="dark min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Top bar with Login button */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4 z-20">
+        <div className="flex items-center gap-2">
+          <img src={ottoLogo} alt="OTTO" className="h-8 w-auto" />
+          <span className="text-foreground font-bold text-lg">OTTO</span>
+        </div>
+        <button
+          onClick={() => navigate("/login")}
+          className="px-5 py-2 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-accent transition-colors"
+        >
+          Login
+        </button>
+      </div>
+
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-cyan-500/8 rounded-full blur-[100px] animate-pulse delay-700" />

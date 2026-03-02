@@ -21,8 +21,8 @@ const App = () => (
       <BrowserRouter>
         <div className="dark">
           <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/" element={<Welcome />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Index />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/assistente" element={<Assistente />} />
