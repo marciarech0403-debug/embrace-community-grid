@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowUp, Globe, Image as ImageIcon, MessageSquare, Search, ChevronDown } from "lucide-react";
+import { Globe, Image as ImageIcon, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import ottoLogo from "@/assets/otto-logo.png";
+import { ClaudeChatInput, type ModelOption } from "@/components/ui/claude-style-ai-input";
 
 interface Message {
   role: "user" | "assistant";
@@ -176,27 +176,26 @@ export function ChatInputBar({
   onModelChange,
 }: ChatInputBarProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("resposta");
   const [selectedModel, setSelectedModel] = useState(externalModel || allModels[Math.floor(Math.random() * allModels.length)]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [modelSearch, setModelSearch] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
   const currentModel = externalModel || selectedModel;
 
+  // Convert allModels strings to ModelOption format for the claude input
+  const modelOptions: ModelOption[] = showModelSelector
+    ? allModels.map((m) => ({ id: m, name: m, description: "" }))
+    : [];
+
   useEffect(() => {
     setMessages([]);
-    setInput("");
     setIsLoading(false);
   }, [location.pathname]);
 
   useEffect(() => {
     setMessages([]);
-    setInput("");
     setIsLoading(false);
   }, [currentModel]);
 
@@ -204,27 +203,12 @@ export function ChatInputBar({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const send = async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
-  const filteredModels = modelSearch
-    ? allModels.filter((m) => m.toLowerCase().includes(modelSearch.toLowerCase()))
-    : allModels;
-
-  const send = async () => {
-    const text = input.trim();
-    if (!text || isLoading) return;
-
-    const userMsg: Message = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
+    const userMsg: Message = { role: "user", content: text.trim() };
+    const allMessages = [...messages, userMsg];
+    setMessages(allMessages);
     setIsLoading(true);
     setActiveTab("resposta");
 
@@ -248,7 +232,7 @@ export function ChatInputBar({
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg], agent, model: currentModel }),
+        body: JSON.stringify({ messages: allMessages, agent, model: currentModel }),
       });
 
       if (resp.status === 429) { toast.error("Limite de requisições excedido."); setIsLoading(false); return; }
@@ -343,7 +327,7 @@ export function ChatInputBar({
       {/* Content area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-3xl">
-          {/* Grok-style hero when no messages */}
+          {/* Hero when no messages */}
           {!hasMessages && (
             <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
               <h1 className="text-[8rem] md:text-[12rem] font-bold text-foreground/[0.06] select-none leading-none tracking-tight">
@@ -431,80 +415,22 @@ export function ChatInputBar({
         </div>
       </div>
 
-      {/* Input area */}
+      {/* Claude-style Input area */}
       <div className={`p-4 shrink-0 ${hasMessages ? "border-t border-border" : ""}`}>
-        <div className="mx-auto max-w-3xl space-y-3">
-          {/* Model selector */}
-          {showModelSelector && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <img src={ottoLogo} alt="" className="h-4 w-auto opacity-60" />
-                <span className="truncate max-w-[200px]">{currentModel}</span>
-                <ChevronDown className="h-3 w-3" />
-              </button>
-
-              {showDropdown && (
-                <div className="absolute bottom-full mb-2 left-0 w-80 rounded-lg bg-card border border-border shadow-xl max-h-72 flex flex-col z-50">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      placeholder="Buscar modelo..."
-                      value={modelSearch}
-                      onChange={(e) => setModelSearch(e.target.value)}
-                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="overflow-y-auto flex-1">
-                    {filteredModels.map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => {
-                          setSelectedModel(m);
-                          onModelChange?.(m);
-                          setShowDropdown(false);
-                          setModelSearch("");
-                        }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors flex items-center gap-2 ${
-                          currentModel === m ? "bg-accent text-foreground font-medium" : "text-muted-foreground"
-                        }`}
-                      >
-                        <img src={ottoLogo} alt="" className="h-3 w-auto opacity-40" />
-                        {m}
-                      </button>
-                    ))}
-                    {filteredModels.length === 0 && (
-                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">Nenhum modelo encontrado</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Input box */}
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-            <input
-              type="text"
-              placeholder={placeholder}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-              disabled={isLoading}
-            />
-            <button
-              onClick={send}
-              disabled={isLoading || !input.trim()}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-30"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </button>
-          </div>
+        <div className="mx-auto max-w-3xl">
+          <ClaudeChatInput
+            placeholder={placeholder}
+            disabled={isLoading}
+            models={modelOptions.length > 0 ? modelOptions : undefined}
+            defaultModel={currentModel}
+            onModelChange={(modelId) => {
+              setSelectedModel(modelId);
+              onModelChange?.(modelId);
+            }}
+            onSendMessage={(message) => {
+              send(message);
+            }}
+          />
         </div>
       </div>
     </div>
